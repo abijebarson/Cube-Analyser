@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Three.js Rubik's Cube</title>
+    <title>Cube Analyzer</title>
     <style>
         body { margin: 0; overflow: hidden; background-color: #f0f0f5; font-family: 'Segoe UI', sans-serif; touch-action: none; }
         canvas { display: block; width: 100%; height: 100%; }
@@ -36,6 +36,12 @@
             font-weight: 600; transition: background 0.2s, transform 0.1s; flex: 0 0 auto;
             font-size: 14px;
         }
+
+        .quick-btn {
+            background: #3a3a3a; color: #eee; padding: 8px 12px; font-family: monospace; font-size: 14px; min-width: 36px;
+        }
+        .quick-btn:hover { background: #505050; transform: translateY(-1px); }
+        .quick-btn:active { transform: scale(0.95); background: #222; }
         
         #runBtn { background: #007aff; color: white; }
         #runBtn:hover { background: #0063ce; }
@@ -47,9 +53,9 @@
         #resetBtn { background: #ff3b30; color: white; }
         #resetBtn:hover { background: #d63229; }
         
-        .hint {
-            width: 100%; text-align: center; font-size: 11px; color: #bbb; 
-            margin-top: 4px; pointer-events: none;
+        #quickActions {
+            width: 100%; display: flex; justify-content: center; gap: 6px; flex-wrap: wrap;
+            margin-top: 4px; padding-top: 8px; border-top: 1px solid rgba(255,255,255,0.1);
         }
 
         #rotationPanel {
@@ -96,12 +102,12 @@
         .rot-btn:active { transform: translateY(1px); background: #222; }
 
         @media (max-width: 600px) {
-            #controls { justify-content: center; width: 95%; }
+            #controls { justify-content: center; width: 95%; bottom: 10px; }
             #algoInput { flex: 1 1 100%; margin-bottom: 4px; }
             
             #rotationPanel { 
                 width: 90%; 
-                top: auto; right: auto; bottom: 140px; left: 50%;
+                top: auto; right: auto; bottom: 180px; left: 50%;
                 transform: translateX(-50%);
             }
             #rotationPanel.visible {
@@ -137,7 +143,8 @@
         <button id="undoBtn">Undo</button>
         <button id="resetBtn">Reset</button>
         <button id="toggleRotPanelBtn" title="Toggle Rotation Controls">🎮</button>
-        <div class="hint">Supports: R, L, U, D, F, B, M, E, S, x, y, z (+ lower + ' + 2)</div>
+        <div id="quickActions">
+        </div>
     </div>
 
     <script type="module">
@@ -303,12 +310,21 @@
             cubeRotGrid.appendChild(btn);
         });
 
+        const quickActions = document.getElementById('quickActions');
+        ['R', 'L', 'U', 'D', 'F', 'B', 'x', 'y', 'z'].forEach(key => {
+            const btn = document.createElement('button');
+            btn.className = 'quick-btn';
+            btn.textContent = key;
+            btn.onclick = () => runSequence([{key, mult: 1}]);
+            quickActions.appendChild(btn);
+        });
+
         function initGui() {
             const gui = new GUI({ title: 'Controls', width: 220 });
             if(window.innerWidth < 600) gui.close();
 
             const params = {
-                gap: 0, speed: 0.15, autoAccelerate: false, showLabels: true,
+                gap: 0, speed: 0.25, autoAccelerate: false, showLabels: false,
                 clickMode: 'Grey Out', centerSelection: false, isUndoing: false,
                 enableClickMask: false, 
                 dimAll: () => { 
@@ -402,9 +418,9 @@
             folderMem.add(memParams, 'load').name('Load Slot');
 
             const fSet = gui.addFolder('Settings');
-            fSet.close();
+            // fSet.close();
             fSet.add(params, 'gap', 0, 1.0).onChange(updateCubes);
-            fSet.add(params, 'speed', 0.05, 0.5);
+            fSet.add(params, 'speed', 0.05, 1.0);
             fSet.add(params, 'autoAccelerate').name('Auto Speedup');
             fSet.add(params, 'showLabels').onChange(() => cubes.forEach(c => { if(c.userData.labelMesh) c.userData.labelMesh.visible = params.showLabels; }));
             
