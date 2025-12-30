@@ -2,26 +2,34 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Three.js Rubik's Cube</title>
     <style>
-        body { margin: 0; overflow: hidden; background-color: #222; font-family: 'Segoe UI', sans-serif; }
-        canvas { display: block; }
+        body { margin: 0; overflow: hidden; background-color: #222; font-family: 'Segoe UI', sans-serif; touch-action: none; }
+        canvas { display: block; width: 100%; height: 100%; }
+        
         #controls {
-            position: absolute; bottom: 30px; left: 50%; transform: translateX(-50%);
-            background: rgba(30, 30, 30, 0.9); padding: 15px 25px; border-radius: 12px;
-            display: flex; gap: 10px; align-items: center; backdrop-filter: blur(5px);
-            border: 1px solid rgba(255,255,255,0.1); color: white;
+            position: absolute; bottom: 20px; left: 50%; transform: translateX(-50%);
+            background: rgba(30, 30, 30, 0.9); padding: 12px; border-radius: 12px;
+            display: flex; gap: 8px; align-items: center; justify-content: center;
+            backdrop-filter: blur(5px); border: 1px solid rgba(255,255,255,0.1); color: white;
+            width: 90%; max-width: 600px; flex-wrap: wrap; box-sizing: border-box;
+            z-index: 10;
         }
+        
         #algoInput {
-            padding: 8px 12px; width: 250px; border-radius: 6px; border: 1px solid #555;
+            padding: 10px; flex: 1 1 140px; border-radius: 6px; border: 1px solid #555;
             background: #333; color: #fff; font-family: monospace; outline: none;
+            font-size: 16px; 
         }
         #algoInput:focus { border-color: #007aff; background: #444; }
+        
         button {
-            padding: 8px 16px; cursor: pointer; border: none; border-radius: 6px;
-            font-weight: 600; transition: background 0.2s;
+            padding: 10px 14px; cursor: pointer; border: none; border-radius: 6px;
+            font-weight: 600; transition: background 0.2s; flex: 0 0 auto;
+            font-size: 14px;
         }
+        
         #runBtn { background: #007aff; color: white; }
         #runBtn:hover { background: #0063ce; }
         #runBtn:active { transform: scale(0.98); }
@@ -31,9 +39,32 @@
         #undoBtn:hover { background: #4a48b8; }
         #resetBtn { background: #ff3b30; color: white; }
         #resetBtn:hover { background: #d63229; }
+        
         .hint {
-            position: absolute; bottom: -20px; left: 0; width: 100%;
-            text-align: center; font-size: 10px; color: #888; pointer-events: none;
+            width: 100%; text-align: center; font-size: 11px; color: #aaa; 
+            margin-top: 4px; pointer-events: none;
+        }
+
+        /* Lil-GUI Custom Layout Fixes */
+        .lil-gui .folder.grid-4:not(.closed) > .children {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 2px;
+        }
+        .lil-gui .folder.grid-3:not(.closed) > .children {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 2px;
+        }
+
+        @media (max-width: 600px) {
+            #controls {
+                justify-content: center;
+            }
+            #algoInput {
+                flex: 1 1 100%;
+                margin-bottom: 4px;
+            }
         }
     </style>
     <script type="importmap">
@@ -47,12 +78,12 @@
 </head>
 <body>
     <div id="controls">
-        <input type="text" id="algoInput" placeholder="R U r' M x" value="R U r' M x">
+        <input type="text" id="algoInput" placeholder="R U R' U'" value="R U R' U'">
         <button id="runBtn">Run</button>
         <button id="shuffleBtn">Shuffle</button>
         <button id="undoBtn">Undo</button>
         <button id="resetBtn">Reset</button>
-        <div class="hint">Supports: R, L, U, D, F, B, M, E, S, x, y, z (and lower/wide)</div>
+        <div class="hint">Supports: R, L, U, D, F, B, M, E, S, x, y, z (+ lower, ', 2)</div>
     </div>
 
     <script type="module">
@@ -191,6 +222,7 @@
             const params = {
                 gap: 0, speed: 0.15, autoAccelerate: false, showLabels: true,
                 clickMode: 'Grey Out', centerSelection: false, isUndoing: false,
+                enableClickMask: false, 
                 dimAll: () => { 
                     cubes.forEach(c => {
                         const isCenter = (Math.abs(c.userData.initialPos.x) + Math.abs(c.userData.initialPos.y) + Math.abs(c.userData.initialPos.z) <= 1);
@@ -274,14 +306,22 @@
             window.updateVisuals = updateVisuals;
 
             const folderRot = gui.addFolder('Rotations');
-            folderRot.domElement.querySelector('.children').style.display = 'grid';
-            folderRot.domElement.querySelector('.children').style.gridTemplateColumns = 'repeat(4, 1fr)';
-            folderRot.domElement.querySelector('.children').style.gap = '2px';
-            const rotationOrder = ['L','l','R','r', 'U','u','D','d', 'F','f','B','b', 'M','E','S',' ', 'x','y','z'];
+            folderRot.domElement.classList.add('grid-4');
+            folderRot.close(); 
+            
+            const rotationOrder = ['L','l','R','r', 'U','u','D','d', 'F','f','B','b', 'M','E','S',' '];
             rotationOrder.forEach(key => {
                 if(key === ' ') { folderRot.add({ ' ':()=>{} }, ' ').name(''); return; }
                 const o = {}; o[key] = () => runSequence([{key, mult: 1}]);
                 folderRot.add(o, key).name(key);
+            });
+
+            const folderCube = gui.addFolder('Cube Rotation');
+            folderCube.domElement.classList.add('grid-3');
+            
+            ['x', 'y', 'z'].forEach(key => {
+                const o = {}; o[key] = () => runSequence([{key, mult: 1}]);
+                folderCube.add(o, key).name(key);
             });
 
             const folderMem = gui.addFolder('Memory');
@@ -293,15 +333,17 @@
             folderMem.add(memParams, 'load').name('Load Slot');
 
             const fSet = gui.addFolder('Settings');
+            fSet.close();
             fSet.add(params, 'gap', 0, 1.0).onChange(updateCubes);
             fSet.add(params, 'speed', 0.05, 0.5);
             fSet.add(params, 'autoAccelerate').name('Auto Speedup');
             fSet.add(params, 'showLabels').onChange(() => cubes.forEach(c => { if(c.userData.labelMesh) c.userData.labelMesh.visible = params.showLabels; }));
             
             const fInt = gui.addFolder('Interaction');
-            fInt.add(params, 'clickMode', ['Grey Out', 'Hide', 'Wireframe']).name('Effect').onChange(updateVisuals);
-            fInt.add(params, 'centerSelection').name('Effect Centers').onChange(updateVisuals);
-            fInt.add(params, 'dimAll').name('Dim All');
+            fInt.add(params, 'enableClickMask').name('Mask'); 
+            fInt.add(params, 'clickMode', ['Grey Out', 'Hide', 'Wireframe']).name('Mask Effect').onChange(updateVisuals);
+            fInt.add(params, 'centerSelection').name('Mask Centers').onChange(updateVisuals);
+            fInt.add(params, 'dimAll').name('Mask All');
             fInt.add(params, 'highlightAll').name('Highlight All');
             fInt.add(params, 'highlightChanged').name('Highlight Moved');
 
@@ -316,6 +358,7 @@
         renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
         document.body.appendChild(renderer.domElement);
         const controls = new OrbitControls(camera, renderer.domElement); controls.enableDamping = true;
+        controls.enablePan = false; 
         
         const raycaster = new THREE.Raycaster(), pointer = new THREE.Vector2();
         window.addEventListener('pointerdown', (e) => {
@@ -324,6 +367,8 @@
             raycaster.setFromCamera(pointer, camera);
             const intersects = raycaster.intersectObjects(cubes);
             if(intersects.length > 0) {
+                if (!window.guiParams.enableClickMask) return;
+
                 const obj = intersects[0].object;
                 const isCenter = (Math.abs(obj.userData.initialPos.x)+Math.abs(obj.userData.initialPos.y)+Math.abs(obj.userData.initialPos.z)<=1);
                 if(window.guiParams.centerSelection || !isCenter) {
@@ -344,9 +389,9 @@
             }
         }
         createCubeGroup();
-        scene.add(new THREE.AmbientLight(0xffffff, 0.6));
-        const dl = new THREE.DirectionalLight(0xffffff, 2); dl.position.set(5, 10, 7); scene.add(dl);
-        scene.add(new THREE.DirectionalLight(0xffffff, 0.5));
+        scene.add(new THREE.AmbientLight(0xffffff, 0.8));
+        const dl = new THREE.DirectionalLight(0xffffff, 2.5); dl.position.set(10, 20, 15); scene.add(dl);
+        const dl2 = new THREE.DirectionalLight(0xffffff, 1.5); dl2.position.set(-10, -10, -10); scene.add(dl2);
         initGui();
 
         document.getElementById('runBtn').onclick = () => parseAndRun(document.getElementById('algoInput').value);
