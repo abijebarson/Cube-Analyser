@@ -153,6 +153,10 @@
         import { RoundedBoxGeometry } from 'three/addons/geometries/RoundedBoxGeometry.js';
         import GUI from 'three/addons/libs/lil-gui.module.min.js';
 
+        const DEFAULT_CONFIG = {
+            showLabels: false
+        };
+
         const palette = {
             right: new THREE.Color(0xB90000), left: new THREE.Color(0xFF5900),
             top: new THREE.Color(0xFFD500), bottom: new THREE.Color(0xFFFFFF),
@@ -199,7 +203,9 @@
                     label.rotation.set(...conf.rot);
                 }
                 
-                if (window.guiParams?.showLabels === false) label.visible = false;
+                const show = window.guiParams ? window.guiParams.showLabels : DEFAULT_CONFIG.showLabels;
+                label.visible = show;
+
                 mesh.add(label);
                 mesh.userData.labelMesh = label;
             }
@@ -324,7 +330,8 @@
             if(window.innerWidth < 600) gui.close();
 
             const params = {
-                gap: 0, speed: 0.25, autoAccelerate: false, showLabels: false,
+                gap: 0, speed: 0.25, autoAccelerate: false, 
+                showLabels: DEFAULT_CONFIG.showLabels,
                 clickMode: 'Grey Out', centerSelection: false, isUndoing: false,
                 enableClickMask: false, 
                 dimAll: () => { 
