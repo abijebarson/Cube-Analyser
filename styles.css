@@ -1,0 +1,131 @@
+body { margin: 0; overflow: hidden; background-color: #f0f0f5; font-family: 'Segoe UI', sans-serif; touch-action: none; }
+canvas { display: block; width: 100%; height: 100%; }
+
+/* Main Control Panel */
+#controls {
+    position: absolute; bottom: 20px; left: 50%; transform: translateX(-50%);
+    background: rgba(30, 30, 30, 0.9); padding: 16px; border-radius: 16px;
+    display: flex; flex-direction: column; gap: 10px;
+    backdrop-filter: blur(12px); border: 1px solid rgba(255,255,255,0.1); color: white;
+    width: 90%; max-width: 500px; box-sizing: border-box;
+    z-index: 10;
+    box-shadow: 0 10px 40px rgba(0,0,0,0.2);
+    transition: all 0.2s ease;
+}
+
+/* Control Rows */
+.control-row {
+    display: flex; gap: 8px; width: 100%; justify-content: center;
+}
+
+.control-row button {
+    flex: 1;
+    min-width: 0; 
+    justify-content: center;
+}
+
+/* Inputs & Buttons */
+#algoInput {
+    padding: 10px 14px; flex-grow: 1; border-radius: 8px; border: 1px solid #555;
+    background: #222; color: #fff; font-family: 'Consolas', monospace; outline: none;
+    font-size: 15px; transition: border-color 0.2s;
+    width: 100%; 
+    box-sizing: border-box;
+}
+#algoInput:focus { border-color: #007aff; background: #2a2a2a; }
+
+button {
+    padding: 10px 8px; cursor: pointer; border: none; border-radius: 8px;
+    font-weight: 600; font-size: 13px; transition: all 0.15s ease;
+    color: white; flex-shrink: 0;
+    display: flex; align-items: center; 
+}
+button:active { transform: scale(0.96); }
+
+/* Button Themes */
+.btn-action { background: #007aff; } 
+.btn-action:hover { background: #0063ce; }
+
+.btn-success { background: #34c759; } 
+.btn-success:hover { background: #28a745; }
+
+.btn-warn { background: #ff9500; } 
+.btn-warn:hover { background: #e08600; }
+
+.btn-neutral { background: #5856d6; } 
+.btn-neutral:hover { background: #4a48b8; }
+
+.btn-danger { background: #ff3b30; } 
+.btn-danger:hover { background: #d63229; }
+
+.btn-icon { background: #444; font-size: 16px; padding: 10px; }
+.btn-icon:hover { background: #555; }
+.btn-icon.active { background: #007aff; }
+.btn-icon.mode-2 { background: #aa4aff; }
+
+/* Quick Actions Row - Hidden by Default */
+#quickActions {
+    display: none; 
+    gap: 6px; justify-content: center; flex-wrap: wrap;
+    padding-top: 4px; margin-top: 4px;
+    border-top: 1px solid rgba(255,255,255,0.1);
+}
+
+#quickActions.visible {
+    display: flex;
+    animation: fadeIn 0.2s ease-out;
+}
+
+@keyframes fadeIn {
+    from { opacity: 0; transform: translateY(-5px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+.quick-btn {
+    background: #3a3a3a; color: #ddd; padding: 8px 12px; 
+    font-family: monospace; font-size: 14px; min-width: 32px;
+    border-radius: 6px;
+    flex: 0 0 auto; 
+    justify-content: center;
+}
+.quick-btn:hover { background: #505050; color: #fff; transform: translateY(-2px); }
+
+.separator { width: 10px; }
+
+#rotationPanel {
+    position: absolute; top: 50%; right: 20px; transform: translateY(-50%);
+    background: rgba(30, 30, 30, 0.95); padding: 15px; border-radius: 12px;
+    backdrop-filter: blur(10px); border: 1px solid rgba(255,255,255,0.1); color: white;
+    display: none; flex-direction: column; gap: 15px;
+    z-index: 9; min-width: 240px;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+}
+#rotationPanel.visible { display: flex; animation: slideInRight 0.2s ease-out; }
+
+@keyframes slideInRight {
+    from { opacity: 0; transform: translate(20px, -50%); }
+    to { opacity: 1; transform: translate(0, -50%); }
+}
+@keyframes slideUp {
+    from { opacity: 0; transform: translate(-50%, 10px); }
+    to { opacity: 1; transform: translate(-50%, 0); }
+}
+
+.panel-section-title {
+    font-size: 11px; text-transform: uppercase; color: #888; letter-spacing: 1px; margin-bottom: 8px; font-weight: 700;
+}
+.rot-grid-4 { display: grid; grid-template-columns: repeat(4, 1fr); gap: 6px; }
+.rot-grid-3 { display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px; }
+.rot-btn { background: #3a3a3a; font-family: monospace; font-size: 13px; padding: 8px 0; border-radius: 4px; justify-content: center; }
+.rot-btn:hover { background: #505050; }
+
+@media (max-width: 600px) {
+    #controls { bottom: 10px; width: 95%; padding: 12px; }
+    #algoInput { font-size: 14px; }
+    #rotationPanel { 
+        width: 90%; top: auto; right: auto; bottom: 230px; 
+        left: 50%;
+        transform: translateX(-50%);
+    }
+    #rotationPanel.visible { animation: slideUp 0.2s ease-out; }
+}
